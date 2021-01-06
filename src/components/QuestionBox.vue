@@ -10,7 +10,11 @@
         <b-list-group-item  
         v-for="(answer, index) in answers" :key="index"
         @click="selectAnswer(index)"
-        :class="[ selectedIndex === index ? 'selected' : '']"
+        :class="[ 
+        !answered && selectedIndex === index ? 'selected' : 
+        answered && correctIndex === index ? 'correct' : 
+        answered && selectedIndex=== index && correctIndex !== index ? 'incorrect' : ''
+        ]"
         >
            {{ answer }}
         </b-list-group-item>
@@ -21,6 +25,7 @@
       <b-button 
       variant="primary" 
       @click="submitAnswer"
+      :disabled="selectedIndex === null || answered"
       >
       Submit</b-button>
       <b-button @click="next" variant="success" href="#">Next</b-button>
@@ -35,12 +40,15 @@ export default {
   props: {
     currentQuestion: Object,
     next: Function,
+    increment: Function,
   },
 
   data: function(){
     return {
       selectedIndex: null,
-      shuffleAnswers: []
+      correctIndex: null,
+      shuffleAnswers: [],
+      answered: false
     }
   },
 
@@ -57,6 +65,7 @@ export default {
       immediate: true,
       handler() {
         this.selectedIndex= null
+        this.answered = false
         this.shuffleAnswer()
       }
     }
@@ -69,12 +78,21 @@ export default {
       
        this.selectedIndex = index
     },
-    submitAnswer(){
 
+    submitAnswer(){
+      let isCorrect = false
+
+      if(this.selectedIndex === this.correctIndex){
+        isCorrect = true
+      }
+        this.answered = true
+      this.increment(isCorrect)
     },
+
     shuffleAnswer() {
      let answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
      this.shuffleAnswers= _.shuffle(answers)
+     this.correctIndex = this.shuffleAnswers.indexOf(this.currentQuestion.correct_answer)
     }
   }
 };
